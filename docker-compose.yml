@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   fastapi:
     build:
@@ -9,17 +7,6 @@ services:
       - "${fastapi_port}:${fastapi_port}"
     env_file:
       - .env
-    environment:
-      - CUDA_VISIBLE_DEVICES=0
-      - fastapi_port=${fastapi_port}
-      - secret_key=${secret_key}
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
     volumes:
       - ./uploads:/app/uploads
       - ./outputs:/app/outputs
@@ -32,16 +19,8 @@ services:
       - "${streamlit_port}:${streamlit_port}"
     env_file:
       - .env
-    environment:
-      - CUDA_VISIBLE_DEVICES=0
-      - streamlit_port=${streamlit_port}
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    depends_on:
+      - fastapi
     volumes:
       - ./uploads:/app/uploads
       - ./outputs:/app/outputs

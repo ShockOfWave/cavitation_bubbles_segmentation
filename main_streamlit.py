@@ -10,7 +10,7 @@ from settings import get_settings
 settings = get_settings()
 
 # Используем разные адреса для внутренней связи и для ссылок скачивания
-INTERNAL_API_URL = f"http://fastapi:{settings.fastapi_port}"   # для запросов между контейнерами
+INTERNAL_API_URL = f"http://{settings.fastapi_host}:{settings.fastapi_port}"   # для запросов между контейнерами
 EXTERNAL_API_URL = f"http://localhost:{settings.fastapi_port}"   # для формирования ссылок, доступных извне
 
 # Инициализируем сессионное состояние для хранения токена
