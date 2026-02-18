@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     username: str
     password: str
     
+    fastapi_host: str = Field(default="fastapi", env="fastapi_host")
     fastapi_port: int = Field(default=8000, env="fastapi_port")
     streamlit_port: int = Field(default=8501, env="streamlit_port")
     secret_key: str

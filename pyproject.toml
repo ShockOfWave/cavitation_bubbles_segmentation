@@ -1,0 +1,18 @@
+[project]
+name = "cavitation-bubbles-segmentation"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.129.0",
+    "huggingface-hub>=1.4.1",
+    "opencv-python>=4.13.0.92",
+    "pydantic-settings>=2.13.0",
+    "python-jose>=3.5.0",
+    "python-multipart>=0.0.22",
+    "roboflow>=1.2.13",
+    "streamlit>=1.54.0",
+    "ultralytics>=8.4.14",
+    "uvicorn>=0.41.0",
+]
