@@ -9,9 +9,8 @@ from settings import get_settings
 
 settings = get_settings()
 
-# Используем разные адреса для внутренней связи и для ссылок скачивания
-INTERNAL_API_URL = f"http://{settings.fastapi_host}:{settings.fastapi_port}"   # для запросов между контейнерами
-EXTERNAL_API_URL = f"http://localhost:{settings.fastapi_port}"   # для формирования ссылок, доступных извне
+# Адрес для внутренней связи между контейнерами
+INTERNAL_API_URL = f"http://{settings.fastapi_host}:{settings.fastapi_port}"
 
 # Инициализируем сессионное состояние для хранения токена
 if "token" not in st.session_state:
@@ -99,10 +98,25 @@ if uploaded_file is not None:
                 except Exception as e:
                     st.error(f"Ошибка перекодировки видео: {e}")
             st.video(output_video)
-            # Формируем ссылки для скачивания, используя EXTERNAL_API_URL
-            st.markdown(f"[Скачать обработанное видео]({EXTERNAL_API_URL}/download/?path={output_video}&token={st.session_state.token})")
-            st.markdown(f"[Скачать CSV файл]({EXTERNAL_API_URL}/download/?path={csv_file}&token={st.session_state.token})")
-            st.markdown(f"[Скачать гистограмму скорости]({EXTERNAL_API_URL}/download/?path={speed_hist}&token={st.session_state.token})")
-            st.markdown(f"[Скачать гистограмму площади]({EXTERNAL_API_URL}/download/?path={area_hist}&token={st.session_state.token})")
+            # Кнопки скачивания через Streamlit (файлы читаются на стороне сервера)
+            headers = {"Authorization": f"Bearer {st.session_state.token}"}
+            for label, file_path in [
+                ("Скачать обработанное видео", output_video),
+                ("Скачать CSV файл", csv_file),
+                ("Скачать гистограмму скорости", speed_hist),
+                ("Скачать гистограмму площади", area_hist),
+            ]:
+                resp = requests.get(
+                    f"{INTERNAL_API_URL}/download/",
+                    params={"path": file_path, "token": st.session_state.token},
+                )
+                if resp.status_code == 200:
+                    st.download_button(
+                        label=label,
+                        data=resp.content,
+                        file_name=os.path.basename(file_path),
+                    )
+                else:
+                    st.error(f"Ошибка скачивания: {label}")
         else:
             st.error("Ошибка при обработке видео.")

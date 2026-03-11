@@ -170,6 +170,9 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# Streamlit configuratiuon
+.streamlit
+
 # roboflow datasets
 cavitation_bubbles_segmentation*/
 
