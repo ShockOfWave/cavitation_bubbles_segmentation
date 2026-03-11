@@ -12,12 +12,16 @@ settings = get_settings()
 # Адрес для внутренней связи между контейнерами
 INTERNAL_API_URL = f"http://{settings.fastapi_host}:{settings.fastapi_port}"
 
-# Инициализируем сессионное состояние для хранения токена
+# Инициализируем сессионное состояние
 if "token" not in st.session_state:
     st.session_state.token = None
+if "processing_result" not in st.session_state:
+    st.session_state.processing_result = None
 
 def rerun_or_stop():
-    if hasattr(st, "experimental_rerun"):
+    if hasattr(st, "rerun"):
+        st.rerun()
+    elif hasattr(st, "experimental_rerun"):
         st.experimental_rerun()
     else:
         st.stop()
@@ -84,7 +88,6 @@ if uploaded_file is not None:
             csv_file = result.get("csv_file")
             speed_hist = result.get("speed_hist_file")
             area_hist = result.get("area_hist_file")
-            st.success("Видео обработано!")
 
             # Если обработанное видео в формате AVI, перекодируем в mp4 для предпросмотра
             if output_video.lower().endswith(".avi"):
@@ -97,9 +100,9 @@ if uploaded_file is not None:
                     output_video = mp4_video
                 except Exception as e:
                     st.error(f"Ошибка перекодировки видео: {e}")
-            st.video(output_video)
-            # Кнопки скачивания через Streamlit (файлы читаются на стороне сервера)
-            headers = {"Authorization": f"Bearer {st.session_state.token}"}
+
+            # Скачиваем файлы и сохраняем в session_state
+            downloads = {}
             for label, file_path in [
                 ("Скачать обработанное видео", output_video),
                 ("Скачать CSV файл", csv_file),
@@ -111,12 +114,26 @@ if uploaded_file is not None:
                     params={"path": file_path, "token": st.session_state.token},
                 )
                 if resp.status_code == 200:
-                    st.download_button(
-                        label=label,
-                        data=resp.content,
-                        file_name=os.path.basename(file_path),
-                    )
-                else:
-                    st.error(f"Ошибка скачивания: {label}")
+                    downloads[label] = {
+                        "data": resp.content,
+                        "file_name": os.path.basename(file_path),
+                    }
+            st.session_state.processing_result = {
+                "output_video": output_video,
+                "downloads": downloads,
+            }
         else:
             st.error("Ошибка при обработке видео.")
+
+    # Показываем результаты из session_state
+    if st.session_state.processing_result is not None:
+        result = st.session_state.processing_result
+        st.success("Видео обработано!")
+        st.video(result["output_video"])
+        for label, info in result["downloads"].items():
+            st.download_button(
+                label=label,
+                data=info["data"],
+                file_name=info["file_name"],
+                key=label,
+            )
