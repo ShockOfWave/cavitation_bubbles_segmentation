@@ -20,7 +20,7 @@ class YoloSegmenter:
             'confidence': float
         """
         # Выполняем инференс для одного кадра
-        results = self.model(frame)
+        results = self.model(frame, verbose=False)
         result = results[0]  # При обработке одного кадра возвращается список из одного результата
 
         detections = []

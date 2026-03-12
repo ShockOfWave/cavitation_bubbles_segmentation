@@ -5,7 +5,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from src.segmentation import YoloSegmenter
-from src.tracker_bytetrack import ByteTracker
+from src.tracker_bytetrack import ByteTracker, KalmanBoxTracker
 from src.utils import draw_mask
 
 class VideoProcessor:
@@ -15,6 +15,10 @@ class VideoProcessor:
         self.tracker = ByteTracker(high_thresh=0.6, low_thresh=0.1, max_time_lost=10, iou_threshold=0.2, distance_threshold=50)
 
     def process_video(self, input_video_path: str, output_video_path: str, csv_path: str, hist_folder: str):
+        # Сбрасываем трекер перед каждой обработкой
+        self.tracker = ByteTracker(high_thresh=0.6, low_thresh=0.1, max_time_lost=10, iou_threshold=0.2, distance_threshold=50)
+        KalmanBoxTracker.count = 0
+
         cap = cv2.VideoCapture(input_video_path)
         if not cap.isOpened():
             print("Ошибка: не удалось открыть видеофайл.")
