@@ -51,15 +51,14 @@ if uploaded_file is not None:
 
     # Предпросмотр видео: если формат не mp4, пробуем перекодировать для предпросмотра
     if ext != "mp4":
-        with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp:
-            tmp_preview_path = tmp.name
-        original_path = os.path.join("uploads", f"{uuid.uuid4()}_{uploaded_file.name}")
-        os.makedirs("uploads", exist_ok=True)
-        with open(original_path, "wb") as f:
-            f.write(video_bytes)
+        with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as tmp_orig:
+            tmp_orig.write(video_bytes)
+            tmp_orig_path = tmp_orig.name
+        with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp_preview:
+            tmp_preview_path = tmp_preview.name
         try:
             subprocess.run(
-                ["ffmpeg", "-i", original_path, "-c:v", "libx264", "-preset", "fast", "-y", tmp_preview_path],
+                ["ffmpeg", "-i", tmp_orig_path, "-c:v", "libx264", "-preset", "fast", "-y", tmp_preview_path],
                 check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
             with open(tmp_preview_path, "rb") as f:
@@ -70,15 +69,9 @@ if uploaded_file is not None:
     else:
         st.video(video_bytes)
 
-    # Сохраняем оригинал для отправки на обработку
-    unique_filename = f"{uuid.uuid4()}_{uploaded_file.name}"
-    save_path = os.path.join("uploads", unique_filename)
-    os.makedirs("uploads", exist_ok=True)
-    with open(save_path, "wb") as f:
-        f.write(video_bytes)
-
     if st.button("Обработать видео"):
         headers = {"Authorization": f"Bearer {st.session_state.token}"}
+        unique_filename = f"{uuid.uuid4()}_{uploaded_file.name}"
         files = {"file": (unique_filename, video_bytes)}
         with st.spinner("Обработка видео..."):
             response = requests.post(f"{INTERNAL_API_URL}/process_video/", files=files, headers=headers)

@@ -7,9 +7,6 @@ services:
       - "${fastapi_port}:${fastapi_port}"
     env_file:
       - .env
-    volumes:
-      - ./uploads:/app/uploads
-      - ./outputs:/app/outputs
 
   streamlit:
     build:
@@ -21,6 +18,3 @@ services:
       - .env
     depends_on:
       - fastapi
-    volumes:
-      - ./uploads:/app/uploads
-      - ./outputs:/app/outputs

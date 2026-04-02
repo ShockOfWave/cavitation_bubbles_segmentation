@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import shutil
 import os
 import uuid
+import tempfile
 
 from src.video_processing import VideoProcessor
 from settings import get_settings, Settings
@@ -71,12 +72,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
          raise credentials_exception
     return {"username": username}
 
-# Определяем папки для хранения файлов с уникальными именами
-UPLOAD_FOLDER = "uploads"
-OUTPUT_FOLDER = "outputs"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-
 # Инициализируем VideoProcessor (укажите корректный путь к модели)
 MODEL_PATH = "hf_model_repo/model.pt"
 video_processor = VideoProcessor(MODEL_PATH)
@@ -86,18 +81,17 @@ async def process_video_endpoint(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
-    # Генерируем уникальное имя для загружаемого файла
+    tmp_dir = tempfile.mkdtemp()
     unique_filename = f"{uuid.uuid4()}_{file.filename}"
-    input_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+    input_path = os.path.join(tmp_dir, unique_filename)
     with open(input_path, "wb") as buffer:
          shutil.copyfileobj(file.file, buffer)
 
-    output_video_path = os.path.join(OUTPUT_FOLDER, f"processed_{unique_filename}")
-    csv_path = os.path.join(OUTPUT_FOLDER, f"data_{unique_filename.split('.')[0]}.csv")
-    hist_folder = OUTPUT_FOLDER  # можно использовать отдельную папку или уникальный идентификатор
+    output_video_path = os.path.join(tmp_dir, f"processed_{unique_filename}")
+    csv_path = os.path.join(tmp_dir, f"data_{unique_filename.split('.')[0]}.csv")
 
     speed_hist_file, area_hist_file = video_processor.process_video(
-         input_path, output_video_path, csv_path, hist_folder
+         input_path, output_video_path, csv_path, tmp_dir
     )
     return {
          "output_video": output_video_path,
