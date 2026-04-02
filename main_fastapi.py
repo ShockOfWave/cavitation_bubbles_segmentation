@@ -1,8 +1,8 @@
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.responses import FileResponse
-from jose import JWTError, jwt  # pip install python-jose
+from jose import JWTError, jwt
 from datetime import datetime, timedelta
+import base64
 import shutil
 import os
 import uuid
@@ -76,34 +76,38 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 MODEL_PATH = "hf_model_repo/model.pt"
 video_processor = VideoProcessor(MODEL_PATH)
 
+def _read_file_b64(path: str) -> str:
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
 @app.post("/process_video/")
 async def process_video_endpoint(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
     tmp_dir = tempfile.mkdtemp()
-    unique_filename = f"{uuid.uuid4()}_{file.filename}"
-    input_path = os.path.join(tmp_dir, unique_filename)
-    with open(input_path, "wb") as buffer:
-         shutil.copyfileobj(file.file, buffer)
-
-    output_video_path = os.path.join(tmp_dir, f"processed_{unique_filename}")
-    csv_path = os.path.join(tmp_dir, f"data_{unique_filename.split('.')[0]}.csv")
-
-    speed_hist_file, area_hist_file = video_processor.process_video(
-         input_path, output_video_path, csv_path, tmp_dir
-    )
-    return {
-         "output_video": output_video_path,
-         "csv_file": csv_path,
-         "speed_hist_file": speed_hist_file,
-         "area_hist_file": area_hist_file
-    }
-
-@app.get("/download/")
-async def download_file(path: str, token: str):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return FileResponse(path, filename=os.path.basename(path))
+        unique_filename = f"{uuid.uuid4()}_{file.filename}"
+        input_path = os.path.join(tmp_dir, unique_filename)
+        with open(input_path, "wb") as buffer:
+             shutil.copyfileobj(file.file, buffer)
+
+        output_video_path = os.path.join(tmp_dir, f"processed_{unique_filename}")
+        csv_path = os.path.join(tmp_dir, f"data_{unique_filename.split('.')[0]}.csv")
+
+        speed_hist_file, area_hist_file = video_processor.process_video(
+             input_path, output_video_path, csv_path, tmp_dir
+        )
+
+        return {
+             "output_video": _read_file_b64(output_video_path),
+             "output_video_name": os.path.basename(output_video_path),
+             "csv_file": _read_file_b64(csv_path),
+             "csv_file_name": os.path.basename(csv_path),
+             "speed_hist_file": _read_file_b64(speed_hist_file) if speed_hist_file else None,
+             "speed_hist_name": os.path.basename(speed_hist_file) if speed_hist_file else None,
+             "area_hist_file": _read_file_b64(area_hist_file) if area_hist_file else None,
+             "area_hist_name": os.path.basename(area_hist_file) if area_hist_file else None,
+        }
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)

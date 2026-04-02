@@ -1,9 +1,8 @@
 import streamlit as st
 import requests
-import os
+import base64
 import subprocess
 import tempfile
-import uuid
 from settings import get_settings
 
 
@@ -71,48 +70,30 @@ if uploaded_file is not None:
 
     if st.button("Обработать видео"):
         headers = {"Authorization": f"Bearer {st.session_state.token}"}
-        unique_filename = f"{uuid.uuid4()}_{uploaded_file.name}"
-        files = {"file": (unique_filename, video_bytes)}
+        files = {"file": (uploaded_file.name, video_bytes)}
         with st.spinner("Обработка видео..."):
             response = requests.post(f"{INTERNAL_API_URL}/process_video/", files=files, headers=headers)
         if response.status_code == 200:
             result = response.json()
-            output_video = result.get("output_video")
-            csv_file = result.get("csv_file")
-            speed_hist = result.get("speed_hist_file")
-            area_hist = result.get("area_hist_file")
+            video_data = base64.b64decode(result["output_video"])
+            csv_data = base64.b64decode(result["csv_file"])
 
-            # Если обработанное видео в формате AVI, перекодируем в mp4 для предпросмотра
-            if output_video.lower().endswith(".avi"):
-                mp4_video = output_video.replace(".avi", ".mp4")
-                try:
-                    subprocess.run(
-                        ["ffmpeg", "-i", output_video, "-c:v", "libx264", "-preset", "fast", "-y", mp4_video],
-                        check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                    )
-                    output_video = mp4_video
-                except Exception as e:
-                    st.error(f"Ошибка перекодировки видео: {e}")
-
-            # Скачиваем файлы и сохраняем в session_state
-            downloads = {}
-            for label, file_path in [
-                ("Скачать обработанное видео", output_video),
-                ("Скачать CSV файл", csv_file),
-                ("Скачать гистограмму скорости", speed_hist),
-                ("Скачать гистограмму площади", area_hist),
-            ]:
-                resp = requests.get(
-                    f"{INTERNAL_API_URL}/download/",
-                    params={"path": file_path, "token": st.session_state.token},
-                )
-                if resp.status_code == 200:
-                    downloads[label] = {
-                        "data": resp.content,
-                        "file_name": os.path.basename(file_path),
-                    }
+            downloads = {
+                "Скачать обработанное видео": {"data": video_data, "file_name": result["output_video_name"]},
+                "Скачать CSV файл": {"data": csv_data, "file_name": result["csv_file_name"]},
+            }
+            if result.get("speed_hist_file"):
+                downloads["Скачать гистограмму скорости"] = {
+                    "data": base64.b64decode(result["speed_hist_file"]),
+                    "file_name": result["speed_hist_name"],
+                }
+            if result.get("area_hist_file"):
+                downloads["Скачать гистограмму площади"] = {
+                    "data": base64.b64decode(result["area_hist_file"]),
+                    "file_name": result["area_hist_name"],
+                }
             st.session_state.processing_result = {
-                "output_video": output_video,
+                "video_data": video_data,
                 "downloads": downloads,
             }
         else:
@@ -122,7 +103,7 @@ if uploaded_file is not None:
     if st.session_state.processing_result is not None:
         result = st.session_state.processing_result
         st.success("Видео обработано!")
-        st.video(result["output_video"])
+        st.video(result["video_data"])
         for label, info in result["downloads"].items():
             st.download_button(
                 label=label,
