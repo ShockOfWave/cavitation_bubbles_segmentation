@@ -1,7 +1,7 @@
 [project]
 name = "cavitation-bubbles-segmentation"
 version = "0.1.0"
-description = "Add your description here"
+description = "Detection, segmentation, and tracking of cavitation bubbles in video using YOLO and ByteTrack"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

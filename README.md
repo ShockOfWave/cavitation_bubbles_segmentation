@@ -36,7 +36,6 @@ A tool for detecting, segmenting, and tracking cavitation bubbles in video. Uses
 └── src/
     ├── segmentation.py           # YOLO segmentation logic
     ├── tracker_bytetrack.py      # ByteTrack integration
-    ├── tracking.py               # Centroid tracker
     ├── video_processing.py       # Video processing pipeline
     └── utils.py
 ```
@@ -139,7 +138,6 @@ Open [http://localhost:8501](http://localhost:8501).
 |--------|------|-------------|
 | `POST` | `/token` | Obtain a JWT token |
 | `POST` | `/process_video/` | Process a video file |
-| `GET` | `/download/` | Download a result file |
 
 Interactive docs available at [http://localhost:8000/docs](http://localhost:8000/docs).
 

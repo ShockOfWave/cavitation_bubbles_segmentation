@@ -23,6 +23,6 @@ COPY . .
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-EXPOSE ${fastapi_port}
+EXPOSE 8000
 
-CMD ["uvicorn", "main_fastapi:app", "--host", "0.0.0.0", "--port", "${fastapi_port}", "--reload"]
+CMD uvicorn src.api.main:app --host 0.0.0.0 --port ${fastapi_port:-8000}

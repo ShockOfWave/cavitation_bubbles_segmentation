@@ -1,18 +1,12 @@
 import os
-from ultralytics import YOLO
-from ultralytics import settings
-from settings import get_settings
+
 from roboflow import Roboflow
-# from ultralytics.yolo.utils import ExperimentAnalysis
+from ultralytics import YOLO
+from ultralytics import settings as ultra_settings
 
+from src.config import get_settings
 
-settings.update({"wandb": True})
-
-# logdir = "/home/alcatraz/Documents/PycharmProjects/cavitation_bubbles_segmentation/cavitation_bubbles_segmentation/yolov11x/_tune_2025-01-30_11-04-42"
-
-# analysis = ExperimentAnalysis(logdir)
-
-# config = analysis.get_best_config(metric="metrics/mAP50(M)", mode="max")
+ultra_settings.update({"wandb": True})
 
 project_settings = get_settings()
 
