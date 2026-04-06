@@ -6,6 +6,7 @@ A tool for detecting, segmenting, and tracking cavitation bubbles in video. Uses
 
 - Frame-by-frame bubble detection and segmentation
 - Object tracking with trajectory export
+- Memory-efficient tracking: bounded history window and automatic cleanup of finished trackers
 - Automatic CSV reports with size and velocity per bubble
 - Histograms and summary plots
 - Streamlit web interface and FastAPI REST service
@@ -21,24 +22,30 @@ A tool for detecting, segmenting, and tracking cavitation bubbles in video. Uses
 ## Project Structure
 
 ```
-├── main_fastapi.py               # REST API for video processing
-├── main_streamlit.py             # Web interface
-├── settings.py                   # Configuration via environment variables
-├── download_from_huggingface.py  # Download pretrained weights from Hugging Face
-├── train_model.py                # Model training
-├── tune_model.py                 # Hyperparameter search
 ├── pyproject.toml                # Project dependencies (uv)
-├── uv.lock                       # Locked dependency versions
 ├── Dockerfile                    # Universal image (CPU/GPU)
 ├── docker-compose.yml            # Run without GPU
 ├── docker-compose.gpu.yml        # Override for NVIDIA GPU
 ├── .env.example                  # Environment variables template
-└── src/
-    ├── segmentation.py           # YOLO segmentation logic
-    ├── tracker_bytetrack.py      # ByteTrack integration
-    ├── tracking.py               # Centroid tracker
-    ├── video_processing.py       # Video processing pipeline
-    └── utils.py
+├── src/
+│   ├── config.py                 # Configuration via environment variables
+│   ├── api/
+│   │   ├── main.py               # FastAPI app factory
+│   │   ├── auth.py               # JWT authentication
+│   │   └── video.py              # Video processing endpoint
+│   ├── ml/
+│   │   ├── segmentation.py       # YOLO segmentation logic
+│   │   ├── tracking.py           # ByteTrack tracker
+│   │   └── processing.py         # Video processing pipeline
+│   └── utils/
+│       ├── visualization.py      # Mask drawing
+│       └── geometry.py           # Centroid, distance calculations
+├── frontend/
+│   └── streamlit_app.py          # Web interface
+└── scripts/
+    ├── train.py                  # Model training
+    ├── tune.py                   # Hyperparameter search
+    └── download_model.py         # Download weights from Hugging Face
 ```
 
 ## Quick Start
@@ -120,13 +127,13 @@ fastapi_host=localhost
 ### 4. Start FastAPI (terminal 1)
 
 ```bash
-uv run uvicorn main_fastapi:app --port 8000 --reload
+uv run uvicorn src.api.main:app --port 8000 --reload
 ```
 
 ### 5. Start Streamlit (terminal 2)
 
 ```bash
-uv run streamlit run main_streamlit.py
+uv run streamlit run frontend/streamlit_app.py
 ```
 
 Open [http://localhost:8501](http://localhost:8501).
@@ -139,7 +146,6 @@ Open [http://localhost:8501](http://localhost:8501).
 |--------|------|-------------|
 | `POST` | `/token` | Obtain a JWT token |
 | `POST` | `/process_video/` | Process a video file |
-| `GET` | `/download/` | Download a result file |
 
 Interactive docs available at [http://localhost:8000/docs](http://localhost:8000/docs).
 
@@ -150,19 +156,19 @@ Interactive docs available at [http://localhost:8000/docs](http://localhost:8000
 Download the dataset from Roboflow and run training:
 
 ```bash
-uv run python train_model.py
+uv run python scripts/train.py
 ```
 
 Hyperparameter search:
 
 ```bash
-uv run python tune_model.py
+uv run python scripts/tune.py
 ```
 
 Download weights from Hugging Face manually:
 
 ```bash
-uv run python download_from_huggingface.py
+uv run python scripts/download_model.py
 ```
 
 ---

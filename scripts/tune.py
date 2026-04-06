@@ -1,14 +1,14 @@
 import os
-from ultralytics import YOLO
-from ultralytics import settings
-from roboflow import Roboflow
-from settings import get_settings
 
+from roboflow import Roboflow
+from ultralytics import YOLO
+from ultralytics import settings as ultra_settings
+
+from src.config import get_settings
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
-settings.update({"runs_dir": "tune_runs", "tensorboard": False, "wandb": True})
-settings.reset()
+ultra_settings.update({"runs_dir": "tune_runs", "tensorboard": False, "wandb": True})
 
 project_settings = get_settings()
 
@@ -24,7 +24,6 @@ model.tune(data=os.path.join(dataset.location, "data.yaml"),
            use_ray=True,
            project="cavitation_bubbles_segmentation",
            name="yolov11m-v9-tune",
-        #    exist_ok=True,
            seed=42,
            plots=True,
            save=True,
@@ -33,4 +32,3 @@ model.tune(data=os.path.join(dataset.location, "data.yaml"),
            workers=1,
            iterations=50,
            device=1)
-

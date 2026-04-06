@@ -1,7 +1,7 @@
 [project]
 name = "cavitation-bubbles-segmentation"
 version = "0.1.0"
-description = "Add your description here"
+description = "Detection, segmentation, and tracking of cavitation bubbles in video using YOLO and ByteTrack"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -13,6 +13,8 @@ dependencies = [
     "python-multipart>=0.0.22",
     "roboflow>=1.2.13",
     "streamlit>=1.54.0",
+    "torch>=2.10.0",
+    "torchvision>=0.25.0",
     "ultralytics>=8.4.14",
     "uvicorn>=0.41.0",
 ]

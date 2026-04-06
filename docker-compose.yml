@@ -2,25 +2,28 @@ services:
   fastapi:
     build:
       context: .
-    command: uvicorn main_fastapi:app --host 0.0.0.0 --port ${fastapi_port} --reload
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port ${fastapi_port}
     ports:
       - "${fastapi_port}:${fastapi_port}"
     env_file:
       - .env
-    volumes:
-      - ./uploads:/app/uploads
-      - ./outputs:/app/outputs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:${fastapi_port}/docs')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   streamlit:
     build:
       context: .
-    command: streamlit run main_streamlit.py --server.port ${streamlit_port} --server.enableCORS false
+    command: streamlit run frontend/streamlit_app.py --server.port ${streamlit_port} --server.enableCORS false
     ports:
       - "${streamlit_port}:${streamlit_port}"
+    environment:
+      - PYTHONPATH=/app
     env_file:
       - .env
     depends_on:
-      - fastapi
-    volumes:
-      - ./uploads:/app/uploads
-      - ./outputs:/app/outputs
+      fastapi:
+        condition: service_healthy
