@@ -6,6 +6,7 @@ A tool for detecting, segmenting, and tracking cavitation bubbles in video. Uses
 
 - Frame-by-frame bubble detection and segmentation
 - Object tracking with trajectory export
+- Memory-efficient tracking: bounded history window and automatic cleanup of finished trackers
 - Automatic CSV reports with size and velocity per bubble
 - Histograms and summary plots
 - Streamlit web interface and FastAPI REST service
