@@ -2,6 +2,7 @@ import csv
 import logging
 import math
 import os
+import subprocess
 
 import cv2
 import matplotlib.pyplot as plt
@@ -98,6 +99,14 @@ class VideoProcessor:
             cap.release()
 
         logger.info("Processed %d frames from %s", frame_idx, input_video_path)
+
+        h264_path = output_video_path + ".h264.mp4"
+        subprocess.run(
+            ["ffmpeg", "-i", output_video_path, "-c:v", "libx264", "-preset", "fast", "-y", h264_path],
+            check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        os.replace(h264_path, output_video_path)
+
         return _generate_histograms(tracker, hist_folder)
 
 
