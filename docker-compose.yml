@@ -20,6 +20,8 @@ services:
     command: streamlit run frontend/streamlit_app.py --server.port ${streamlit_port} --server.enableCORS false
     ports:
       - "${streamlit_port}:${streamlit_port}"
+    environment:
+      - PYTHONPATH=/app
     env_file:
       - .env
     depends_on:
