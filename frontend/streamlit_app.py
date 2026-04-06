@@ -39,8 +39,8 @@ if st.session_state.token is None:
                 st.error("Invalid credentials. Please try again.")
     st.stop()
 
-st.title("Отслеживание кавитационных пузырьков и анализ гистограмм")
-uploaded_file = st.file_uploader("Загрузите видео", type=["mp4", "avi", "mov"])
+st.title("Cavitation Bubble Tracking and Histogram Analysis")
+uploaded_file = st.file_uploader("Upload video", type=["mp4", "avi", "mov"])
 if uploaded_file is not None:
     video_bytes = uploaded_file.getvalue()
     ext = uploaded_file.name.rsplit(".", 1)[-1].lower()
@@ -62,7 +62,7 @@ if uploaded_file is not None:
                 preview_bytes = f.read()
             st.video(preview_bytes)
         except Exception as e:
-            st.error(f"Ошибка преобразования видео: {e}")
+            st.error(f"Video conversion error: {e}")
         finally:
             if tmp_orig_path and os.path.exists(tmp_orig_path):
                 os.unlink(tmp_orig_path)
@@ -71,10 +71,10 @@ if uploaded_file is not None:
     else:
         st.video(video_bytes)
 
-    if st.button("Обработать видео"):
+    if st.button("Process video"):
         headers = {"Authorization": f"Bearer {st.session_state.token}"}
         files = {"file": (uploaded_file.name, video_bytes)}
-        with st.spinner("Обработка видео..."):
+        with st.spinner("Processing video..."):
             response = requests.post(
                 f"{INTERNAL_API_URL}/process_video/",
                 files=files,
@@ -87,16 +87,16 @@ if uploaded_file is not None:
             csv_data = base64.b64decode(result["csv_file"])
 
             downloads = {
-                "Скачать обработанное видео": {"data": video_data, "file_name": result["output_video_name"]},
-                "Скачать CSV файл": {"data": csv_data, "file_name": result["csv_file_name"]},
+                "Download processed video": {"data": video_data, "file_name": result["output_video_name"]},
+                "Download CSV file": {"data": csv_data, "file_name": result["csv_file_name"]},
             }
             if result.get("speed_hist_file"):
-                downloads["Скачать гистограмму скорости"] = {
+                downloads["Download speed histogram"] = {
                     "data": base64.b64decode(result["speed_hist_file"]),
                     "file_name": result["speed_hist_name"],
                 }
             if result.get("area_hist_file"):
-                downloads["Скачать гистограмму площади"] = {
+                downloads["Download area histogram"] = {
                     "data": base64.b64decode(result["area_hist_file"]),
                     "file_name": result["area_hist_name"],
                 }
@@ -105,11 +105,11 @@ if uploaded_file is not None:
                 "downloads": downloads,
             }
         else:
-            st.error("Ошибка при обработке видео.")
+            st.error("Error processing video.")
 
     if st.session_state.processing_result is not None:
         result = st.session_state.processing_result
-        st.success("Видео обработано!")
+        st.success("Video processed!")
         st.video(result["video_data"])
         for label, info in result["downloads"].items():
             st.download_button(

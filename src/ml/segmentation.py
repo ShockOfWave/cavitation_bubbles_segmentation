@@ -6,18 +6,18 @@ from ultralytics import YOLO
 class YoloSegmenter:
     def __init__(self, model_path: str):
         """
-        Инициализация модели сегментации.
-        model_path - путь к файлу модели.
+        Initialize the segmentation model.
+        model_path - path to the model file.
         """
         self.model = YOLO(model_path)
 
     def segment_frame(self, frame: np.ndarray) -> list:
         """
-        Обрабатывает один кадр и возвращает список детекций.
-        Каждая детекция - словарь с ключами:
+        Process a single frame and return a list of detections.
+        Each detection is a dict with keys:
             'bbox': [x1, y1, x2, y2],
-            'mask': np.ndarray бинарная маска (значения 0 или 1),
-            'class': int (0 - пузырь в фокусе, 1 - пузырь вне фокуса),
+            'mask': np.ndarray binary mask (values 0 or 1),
+            'class': int (0 - in-focus bubble, 1 - out-of-focus bubble),
             'confidence': float
         """
         results = self.model(frame, verbose=False)

@@ -6,8 +6,8 @@ from scipy.optimize import linear_sum_assignment
 
 def iou(bbox1: list, bbox2: list) -> float:
     """
-    Вычисляет IoU (Intersection over Union) для двух bounding box.
-    Формат bbox: [x1, y1, x2, y2]
+    Compute IoU (Intersection over Union) for two bounding boxes.
+    bbox format: [x1, y1, x2, y2]
     """
     x1 = max(bbox1[0], bbox2[0])
     y1 = max(bbox1[1], bbox2[1])
@@ -23,7 +23,7 @@ def iou(bbox1: list, bbox2: list) -> float:
 
 
 def iou_matrix_vectorized(trackers_boxes: np.ndarray, detections_boxes: np.ndarray) -> np.ndarray:
-    """Вычисляет IoU-матрицу между двумя наборами bbox через numpy-векторизацию."""
+    """Compute IoU matrix between two sets of bboxes using numpy vectorization."""
     t = trackers_boxes
     d = detections_boxes
 
@@ -43,19 +43,19 @@ def iou_matrix_vectorized(trackers_boxes: np.ndarray, detections_boxes: np.ndarr
 
 class KalmanBoxTracker:
     """
-    Отслеживает отдельный объект с использованием полноценного Калмана.
-    Состояние: [x, y, s, r, vx, vy, vs]
-      x, y - координаты центра,
-      s - площадь (масштаб),
-      r - соотношение сторон (предполагается относительно стабильным),
-      vx, vy, vs - скорости соответствующих параметров.
+    Tracks a single object using a full Kalman filter.
+    State: [x, y, s, r, vx, vy, vs]
+      x, y - center coordinates,
+      s - area (scale),
+      r - aspect ratio (assumed relatively stable),
+      vx, vy, vs - velocities of the corresponding parameters.
     """
 
     def __init__(self, bbox: list, frame_idx: int, timestamp: float, detection: dict | None = None, tracker_id: int = 0):
         """
-        Инициализация трека по начальному bbox.
+        Initialize a track from an initial bbox.
         bbox: [x1, y1, x2, y2]
-        tracker_id: уникальный ID, назначаемый ByteTracker.
+        tracker_id: unique ID assigned by ByteTracker.
         """
         self.id = tracker_id
 

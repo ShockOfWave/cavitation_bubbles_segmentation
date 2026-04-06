@@ -4,10 +4,10 @@ import numpy as np
 
 def draw_mask(frame: np.ndarray, mask: np.ndarray, color: tuple, alpha: float = 0.5) -> np.ndarray:
     """
-    Накладывает полупрозрачную маску на кадр.
-    mask: бинарная маска (0 или 1), размером, соответствующим кадру.
-    color: кортеж (B, G, R) - цвет для маски.
-    alpha: коэффициент прозрачности.
+    Overlay a semi-transparent mask on a frame.
+    mask: binary mask (0 or 1), sized to match the frame.
+    color: tuple (B, G, R) - mask color.
+    alpha: transparency coefficient.
     """
     mask = mask.astype(np.uint8)
     if mask.shape[:2] != frame.shape[:2]:
