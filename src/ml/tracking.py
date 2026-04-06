@@ -41,6 +41,9 @@ def iou_matrix_vectorized(trackers_boxes: np.ndarray, detections_boxes: np.ndarr
     return np.where(union > 0, inter / union, 0.0).astype(np.float32)
 
 
+_HISTORY_WINDOW = 30
+
+
 class KalmanBoxTracker:
     """
     Tracks a single object using a full Kalman filter.
@@ -94,6 +97,7 @@ class KalmanBoxTracker:
         self.frame_idx = frame_idx
         self.timestamp = timestamp
         self.time_since_update = 0
+        self._history_len = 1
         self.history = [bbox]
         self.detection = detection
 
@@ -137,8 +141,25 @@ class KalmanBoxTracker:
         self.time_since_update = 0
         self.frame_idx = frame_idx
         self.timestamp = timestamp
+        self._history_len += 1
+        if len(self.history) >= _HISTORY_WINDOW:
+            self.history.pop(0)
         self.history.append(bbox)
         self.detection = detection
+
+    @property
+    def history_len(self) -> int:
+        return self._history_len
+
+    def compact(self) -> None:
+        """Strip heavy data that is no longer needed after tracking ends."""
+        self.history.clear()
+        self.detection = None
+        self.P = None
+        self.F = None
+        self.H = None
+        self.Q = None
+        self.R = None
 
     def get_state(self):
         x, y, s, r = self.state[0:4]
@@ -205,6 +226,7 @@ class ByteTracker:
         active_trackers = []
         for tracker in self.trackers:
             if tracker.time_since_update > self.max_time_lost:
+                tracker.compact()
                 self.finished_tracks.append(tracker)
             else:
                 active_trackers.append(tracker)

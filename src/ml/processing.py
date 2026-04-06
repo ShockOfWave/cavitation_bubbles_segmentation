@@ -117,7 +117,7 @@ def _generate_histograms(
     if not all_tracks:
         return None, None
 
-    sorted_tracks = sorted(all_tracks, key=lambda tr: len(tr.history), reverse=True)
+    sorted_tracks = sorted(all_tracks, key=lambda tr: tr.history_len, reverse=True)
     top20 = sorted_tracks[:20]
     speeds = []
     areas = []
