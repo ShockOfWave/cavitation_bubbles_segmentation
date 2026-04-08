@@ -11,6 +11,7 @@ A tool for detecting, segmenting, and tracking cavitation bubbles in video. Uses
 - Histograms and summary plots
 - Streamlit web interface and FastAPI REST service
 - Docker support (CPU and GPU)
+- Experiment tracking with [ClearML](https://clear.ml/)
 
 ## Requirements
 
@@ -43,8 +44,9 @@ A tool for detecting, segmenting, and tracking cavitation bubbles in video. Uses
 ├── frontend/
 │   └── streamlit_app.py          # Web interface
 └── scripts/
-    ├── train.py                  # Model training
-    ├── tune.py                   # Hyperparameter search
+    ├── download_dataset.py       # Download dataset from Roboflow
+    ├── train.py                  # Model training with ClearML logging
+    ├── tune.py                   # Hyperparameter search with ClearML logging
     └── download_model.py         # Download weights from Hugging Face
 ```
 
@@ -74,8 +76,16 @@ Edit `.env` and fill in the values:
 
 ```env
 ROBOFLOW_API_KEY=your_key
+ROBOFLOW_WORKSPACE=itmo-ai-in-chemistry
+ROBOFLOW_PROJECT=cavitation_bubbles_merged
+ROBOFLOW_DATASET_VERSION=1
 HUGGINGFACE_TOKEN=your_token
-WANDB_API_KEY=your_key
+CLEARML_WEB_HOST=https://app.your-clearml-instance.example.com
+CLEARML_API_HOST=https://api.your-clearml-instance.example.com
+CLEARML_FILES_HOST=https://files.your-clearml-instance.example.com
+CLEARML_PROJECT=your_clearml_project
+CLEARML_API_ACCESS_KEY=your_access_key
+CLEARML_API_SECRET_KEY=your_secret_key
 username=admin
 password=your_password
 fastapi_host=fastapi     # use "fastapi" for Docker, "localhost" for local runs
@@ -153,19 +163,27 @@ Interactive docs available at [http://localhost:8000/docs](http://localhost:8000
 
 ## Training
 
-Download the dataset from Roboflow and run training:
+### 1. Download the dataset from Roboflow
+
+```bash
+uv run python scripts/download_dataset.py
+```
+
+### 2. Train the model
 
 ```bash
 uv run python scripts/train.py
 ```
 
-Hyperparameter search:
+Training metrics and artifacts are logged to ClearML automatically.
+
+### 3. Hyperparameter search
 
 ```bash
 uv run python scripts/tune.py
 ```
 
-Download weights from Hugging Face manually:
+### 4. Download weights from Hugging Face
 
 ```bash
 uv run python scripts/download_model.py
@@ -182,3 +200,4 @@ MIT License
 - [Ultralytics YOLO](https://github.com/ultralytics/ultralytics)
 - [ByteTrack](https://github.com/ifzhang/ByteTrack)
 - [Roboflow](https://roboflow.com) — dataset hosting
+- [ClearML](https://clear.ml/) — experiment tracking

@@ -7,7 +7,15 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     roboflow_api_key: str = ""
     huggingface_token: str = ""
-    wandb_api_key: str = ""
+    clearml_web_host: str = ""
+    clearml_api_host: str = ""
+    clearml_files_host: str = ""
+    clearml_api_access_key: str = ""
+    clearml_api_secret_key: str = ""
+    clearml_project: str = "cavitation_tracker_yolo26"
+    roboflow_workspace: str = "itmo-ai-in-chemistry"
+    roboflow_project: str = "cavitation_bubbles_merged"
+    roboflow_dataset_version: int = 1
     username: str
     password: str
 
