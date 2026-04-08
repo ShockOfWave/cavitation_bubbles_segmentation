@@ -1,11 +1,9 @@
-import argparse
 import logging
 import os
 
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import torch
-import yaml
 from clearml import Task
 from ultralytics import YOLO
 from ultralytics import settings as ultra_settings
