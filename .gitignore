@@ -174,10 +174,11 @@ cython_debug/
 .streamlit
 
 # roboflow datasets
+data/
 cavitation_bubbles_segmentation*/
 
-# models weights
-yolo*.pt
+# models
+models/
 
 # wandb logs
 wandb
