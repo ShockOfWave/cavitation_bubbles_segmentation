@@ -1,14 +1,16 @@
+import argparse
 import logging
 import os
 
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import torch
+import yaml
 from clearml import Task
 from ultralytics import YOLO
 from ultralytics import settings as ultra_settings
 
-from src.config import get_settings
+from src.config import get_settings, load_model_config
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
@@ -64,7 +66,17 @@ def on_train_end(trainer) -> None:
         task.get_logger().report_single_value(f"val/{k}", v)
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Train YOLO segmentation model")
+    parser.add_argument("--task_name", type=str, default=None, help="ClearML task name (default: {model}_{version})")
+    parser.add_argument("--model_name", type=str, default=None, help="Model filename (default: from config/models.yaml)")
+    parser.add_argument("--epochs", type=int, default=100, help="Number of epochs (default: 100)")
+    parser.add_argument("--batch", type=int, default=16, help="Batch size (default: 16)")
+    return parser.parse_args()
+
+
 def main() -> None:
+    args = parse_args()
     project_settings = get_settings()
 
     device = get_device()
@@ -81,16 +93,23 @@ def main() -> None:
 
     dataset_version = project_settings.roboflow_dataset_version
 
+    model_cfg = load_model_config("train")
+    model_name = args.model_name or model_cfg.pop("model")
+    model_cfg.pop("model", None)
+    model_cfg["epochs"] = args.epochs
+    model_cfg["batch"] = args.batch
+    run_name = args.task_name or f"{model_name.removesuffix('.pt')}_v{dataset_version}"
+
     task = Task.init(
         project_name=project_settings.clearml_project,
-        task_name=f"yolo26n_v{dataset_version}",
+        task_name=run_name,
         auto_connect_frameworks={"pytorch": False, "matplotlib": False},
         output_uri=False,
     )
     logger.info("ClearML Task created: %s", task.id)
     dataset_path = os.path.join("data", "data.yaml")
 
-    model_path = os.path.join("models", "base", "yolo26n-seg.pt")
+    model_path = os.path.join("models", "base", model_name)
     logger.info("Loading model from %s", model_path)
     model = YOLO(model_path, task="segment")
 
@@ -98,19 +117,19 @@ def main() -> None:
     model.add_callback("on_fit_epoch_end", on_fit_epoch_end)
     model.add_callback("on_train_end", on_train_end)
 
-    logger.info("Starting training on device=%s, data=%s", device, dataset_path)
+    logger.info("Starting training on device=%s, data=%s, config=%s", device, dataset_path, model_cfg)
     model.train(
         data=dataset_path,
-        epochs=100,
-        seed=42,
-        plots=True,
-        save=True,
-        val=True,
         device=device,
-        project=project_settings.clearml_project,
-        name=f"yolo26n_v{dataset_version}",
-        verbose=True,
+        project="models/trained",
+        name=run_name,
+        **model_cfg,
     )
+
+    hyperparams_path = os.path.join("models", "trained", run_name, "hyperparams.yaml")
+    with open(hyperparams_path, "w") as f:
+        yaml.dump(dict(vars(model.trainer.args)), f, default_flow_style=False, sort_keys=False)
+    logger.info("Hyperparameters saved to %s", hyperparams_path)
 
     logger.info("Running test evaluation")
     test_results = model.val(data=dataset_path, split="test", device=device)

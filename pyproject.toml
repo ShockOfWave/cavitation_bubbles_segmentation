@@ -9,6 +9,7 @@ dependencies = [
     "huggingface-hub>=1.4.1",
     "opencv-python>=4.13.0.92",
     "pydantic-settings>=2.13.0",
+    "pyyaml>=6.0",
     "python-jose>=3.5.0",
     "python-multipart>=0.0.22",
     "roboflow>=1.2.13",

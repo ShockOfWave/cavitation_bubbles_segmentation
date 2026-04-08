@@ -6,7 +6,7 @@ from clearml import Task
 from ultralytics import YOLO
 from ultralytics import settings as ultra_settings
 
-from src.config import get_settings
+from src.config import get_settings, load_model_config
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
@@ -43,33 +43,30 @@ def main() -> None:
 
     dataset_version = project_settings.roboflow_dataset_version
 
+    model_cfg = load_model_config("tune")
+    model_name = model_cfg.pop("model")
+    run_name = f"{model_name.removesuffix('.pt')}-v{dataset_version}-tune"
+
     task = Task.init(
         project_name=project_settings.clearml_project,
-        task_name=f"yolo26x-v{dataset_version}-tune",
+        task_name=run_name,
         auto_connect_frameworks={"pytorch": False, "matplotlib": False},
         output_uri=False,
     )
     logger.info("ClearML Task created: %s", task.id)
     dataset_path = os.path.join("data", "data.yaml")
 
-    model_path = os.path.join("models", "base", "yolo26x-seg.pt")
+    model_path = os.path.join("models", "base", model_name)
     logger.info("Loading model from %s", model_path)
     model = YOLO(model_path, task="segment")
 
-    logger.info("Starting tuning on device=%s, data=%s", device, dataset_path)
+    logger.info("Starting tuning on device=%s, data=%s, config=%s", device, dataset_path, model_cfg)
     model.tune(
         data=dataset_path,
-        use_ray=True,
         project=project_settings.clearml_project,
-        name=f"yolo26x-v{dataset_version}-tune",
-        seed=42,
-        plots=True,
-        save=True,
-        val=True,
-        gpu_per_trial=1,
-        workers=1,
-        iterations=50,
+        name=run_name,
         device=device,
+        **model_cfg,
     )
 
 

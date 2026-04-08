@@ -1,7 +1,12 @@
 from functools import lru_cache
+from pathlib import Path
+from typing import Any
 
+import yaml
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+CONFIG_DIR = Path(__file__).resolve().parent.parent / "config"
 
 
 class Settings(BaseSettings):
@@ -30,3 +35,10 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def load_model_config(section: str) -> dict[str, Any]:
+    config_path = CONFIG_DIR / "models.yaml"
+    with config_path.open() as f:
+        config = yaml.safe_load(f)
+    return dict(config[section])
