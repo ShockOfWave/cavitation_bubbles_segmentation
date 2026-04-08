@@ -189,6 +189,12 @@ notebooks
 # upload to huggingface script
 upload_to_huggingface.py
 
+# slurm
+*.slm
+*.err
+*.out
+slurm_logs/
+
 # sub folders
 /uploads
 /outputs
